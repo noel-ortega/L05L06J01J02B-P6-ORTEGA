@@ -74,9 +74,11 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority) {
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+volatile uint8_t frecuencia = 1;
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Error_Handler(void);
+
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -105,7 +107,34 @@ int main(void)
 
   /* Add your application code here
      */
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	GPIO_InitTypeDef GPIO_InitStruct;
+	
+		__HAL_RCC_GPIOB_CLK_ENABLE();
 
+	
+
+	
+	
+	/*configure gpio button*/
+	GPIO_InitStruct.Pin = GPIO_PIN_13;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	
+	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+	
+	
+	GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_7 | GPIO_PIN_14;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	
+	
+	
+	
 #ifdef RTE_CMSIS_RTOS2
   /* Initialize CMSIS-RTOS2 */
   osKernelInitialize ();
@@ -118,8 +147,58 @@ int main(void)
 #endif
 
   /* Infinite loop */
+
+	
   while (1)
   {
+		
+		if(frecuencia==1){
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_Delay(500);
+			
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+			HAL_Delay(500);
+			
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_Delay(500);
+			
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+			HAL_Delay(500);
+		}else if(frecuencia==2){
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_Delay(250);
+			
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+			HAL_Delay(250);
+			
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_Delay(250);
+			
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+			HAL_Delay(250);
+		}else if(frecuencia==4){
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_Delay(125);
+			
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+			HAL_Delay(125);
+			
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_Delay(125);
+			
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+			HAL_Delay(125);
+		}
+		
   }
 }
 
@@ -205,6 +284,22 @@ static void Error_Handler(void)
   }
 }
 
+void EXTI15_10_IRQHandler(void){
+	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	if(GPIO_Pin		== GPIO_PIN_13){
+		if(frecuencia == 1){
+			frecuencia = 2;
+		}else if(frecuencia == 2){
+			frecuencia = 4;
+		}else{
+		frecuencia =1;
+		}
+}
+	}
+	
 #ifdef  USE_FULL_ASSERT
 
 /**
