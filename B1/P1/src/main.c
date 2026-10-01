@@ -111,6 +111,7 @@ int main(void)
 	GPIO_InitTypeDef GPIO_InitStruct;
 	
 		__HAL_RCC_GPIOB_CLK_ENABLE();
+		__HAL_RCC_GPIOD_CLK_ENABLE();
 
 	
 
@@ -125,11 +126,11 @@ int main(void)
 	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 	
 	
-	GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_7 | GPIO_PIN_14;
+	GPIO_InitStruct.Pin = GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 	
 	
 	
@@ -153,49 +154,49 @@ int main(void)
   {
 		
 		if(frecuencia==1){
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
 			HAL_Delay(500);
 			
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
 			HAL_Delay(500);
 			
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
 			HAL_Delay(500);
 			
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
 			HAL_Delay(500);
 		}else if(frecuencia==2){
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
 			HAL_Delay(250);
 			
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
 			HAL_Delay(250);
 			
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
 			HAL_Delay(250);
 			
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
 			HAL_Delay(250);
 		}else if(frecuencia==4){
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
 			HAL_Delay(125);
 			
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
 			HAL_Delay(125);
 			
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
 			HAL_Delay(125);
 			
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
 			HAL_Delay(125);
 		}
 		
