@@ -113,7 +113,7 @@ int main(void)
 	//  168M /(Prescaler*Period) = 0.5
 htim7.Instance = TIM7;
 htim7.Init.Prescaler = 4199;
-htim7.Init.Period = 29999;
+htim7.Init.Period = 59999;
 
 HAL_NVIC_EnableIRQ(TIM7_IRQn);
 __HAL_RCC_TIM7_CLK_ENABLE();
