@@ -71,14 +71,14 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority) {
   */
 
 /* Private typedef -----------------------------------------------------------*/
+
+
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-GPIO_InitTypeDef GPIO_InitStruct;
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Error_Handler(void);
-
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -88,7 +88,7 @@ static void Error_Handler(void);
   * @retval None
   */
 	
-	TIM_HandleTypeDef htim7;
+	TIM_HandleTypeDef htim2;
 int main(void)
 {
 
@@ -106,30 +106,12 @@ int main(void)
   /* Configure the system clock to 168 MHz */
   SystemClock_Config();
   SystemCoreClockUpdate();
+	
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+	uint16_t dutyCycle = HAL_TIM_ReadCapturedValue(&htim2, TIM_CHANNEL_1);
 
   /* Add your application code here
      */
-	
-	//  168M /(Prescaler*Period) = 0.5
-htim7.Instance = TIM7;
-htim7.Init.Prescaler = 4199;
-htim7.Init.Period = 59999;
-
-HAL_NVIC_EnableIRQ(TIM7_IRQn);
-__HAL_RCC_TIM7_CLK_ENABLE();
-__HAL_RCC_GPIOB_CLK_ENABLE();
-
-
-
-HAL_TIM_Base_Init(&htim7);
-HAL_TIM_Base_Start_IT(&htim7);
-
-GPIO_InitStruct.Pin = GPIO_PIN_0;
-GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-GPIO_InitStruct.Pull = GPIO_NOPULL;
-GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
 
 #ifdef RTE_CMSIS_RTOS2
   /* Initialize CMSIS-RTOS2 */
@@ -145,9 +127,31 @@ HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
   /* Infinite loop */
   while (1)
   {
-
-}
+		while(dutyCycle < __HAL_TIM_GET_AUTORELOAD(&htim2)){
+			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, ++dutyCycle);
+  }
+		while(dutyCycle > 0) {
+ 		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, --dutyCycle);
+ }
+		}
 	}
+
+
+void MX_TIM2_Init(void){
+	TIM_OC_InitTypeDef sConfigOC;
+	
+	htim2.Instance = TIM2;
+	htim2.Init.Prescaler = 499;
+	htim2.Init.Period = 999;
+	htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+ HAL_TIM_PWM_Init(&htim2);
+
+ sConfigOC.OCMode = TIM_OCMODE_PWM1;
+ sConfigOC.Pulse = 0;
+ sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+ sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+ HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1);
+}
 
 /**
   * @brief  System Clock Configuration
@@ -188,7 +192,7 @@ static void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 168;    
+  RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -229,16 +233,6 @@ static void Error_Handler(void)
   while(1)
   {
   }
-}
-
-
-void TIM7_IRQHandler(void){
-	HAL_TIM_IRQHandler(&htim7);
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-	if(htim->Instance == TIM7)
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 }
 
 #ifdef  USE_FULL_ASSERT
