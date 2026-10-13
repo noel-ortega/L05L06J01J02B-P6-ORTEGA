@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file    Templates/Src/main.c 
+  * @file    Templates/Src/main.c
   * @author  MCD Application Team
-  * @brief   STM32F4xx HAL API Template project 
+  * @brief   STM32F4xx HAL API Template project
   *
   * @note    modified by ARM
   *          The modifications allow to use this file as User Code Template
@@ -11,6 +11,7 @@
   * @attention
   *
   * Copyright (c) 2017 STMicroelectronics.
+
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -42,7 +43,7 @@ uint32_t HAL_GetTick (void) {
     return ((uint32_t)osKernelGetTickCount ());
   }
 
-  /* If Kernel is not running wait approximately 1 ms then increment 
+  /* If Kernel is not running wait approximately 1 ms then increment
      and return auxiliary tick counter value */
   for (i = (SystemCoreClock >> 14U); i > 0U; i--) {
     __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
@@ -55,7 +56,7 @@ uint32_t HAL_GetTick (void) {
   * Override default HAL_InitTick function
   */
 HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority) {
-  
+
   UNUSED(TickPriority);
 
   return HAL_OK;
@@ -79,7 +80,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority) {
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Error_Handler(void);
-static void MX_TIM2_Init(void);
+void MX_TIM2_Init(void);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -88,17 +89,19 @@ static void MX_TIM2_Init(void);
   * @param  None
   * @retval None
   */
-	
-	TIM_HandleTypeDef htim2;
+
+    TIM_HandleTypeDef htim2;
+    volatile uint8_t dutyCycle = 20;
+    volatile uint32_t ultima_pulsacion = 0;
 int main(void)
 {
 
   /* STM32F4xx HAL library initialization:
        - Configure the Flash prefetch, Flash preread and Buffer caches
-       - Systick timer is configured by default as source of time base, but user 
-             can eventually implement his proper time base source (a general purpose 
-             timer for example or other time source), keeping in mind that Time base 
-             duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and 
+       - Systick timer is configured by default as source of time base, but user
+             can eventually implement his proper time base source (a general purpose
+             timer for example or other time source), keeping in mind that Time base
+             duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and
              handled in milliseconds basis.
        - Low Level Initialization
      */
@@ -107,11 +110,24 @@ int main(void)
   /* Configure the system clock to 168 MHz */
   SystemClock_Config();
   SystemCoreClockUpdate();
-	
-	MX_TIM2_Init();
-	
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-	uint16_t dutyCycle = HAL_TIM_ReadCapturedValue(&htim2, TIM_CHANNEL_1);
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    /* Habilitar reloj del puerto C */
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+
+    /* Configurar PC13 como entrada con interrupción */
+    GPIO_InitStruct.Pin = GPIO_PIN_13;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    /* Habilitar interrupción */
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
+
+    MX_TIM2_Init();
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
 
   /* Add your application code here
      */
@@ -120,7 +136,7 @@ int main(void)
   /* Initialize CMSIS-RTOS2 */
   osKernelInitialize ();
 
-  /* Create thread functions that start executing, 
+  /* Create thread functions that start executing,
   Example: osThreadNew(app_main, NULL, NULL); */
 
   /* Start thread execution */
@@ -130,30 +146,88 @@ int main(void)
   /* Infinite loop */
   while (1)
   {
-	}
-}
- void MX_TIM2_Init(void){
-  TIM_OC_InitTypeDef sConfigOC;
-  
-  htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 83;          // Ajustado para 2000 Hz con 84 MHz de reloj de timer
-  htim2.Init.Period = 499;             // Periodo de 1000 ciclos (0 a 999)
-  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  
-  HAL_TIM_PWM_Init(&htim2);
+    }
 
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 125;               // 25% de 999 para el inicio
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  
-  HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1);
 }
+void MX_TIM2_Init(void)
+{
+    TIM_OC_InitTypeDef sConfigOC = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    /* Habilitar relojes */
+    __HAL_RCC_TIM2_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+
+    /* Configurar PB11 como TIM2_CH4 */
+    GPIO_InitStruct.Pin = GPIO_PIN_11;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
+
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /* Configurar TIM2 */
+    htim2.Instance = TIM2;
+    htim2.Init.Prescaler = 83;
+    htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim2.Init.Period = 499;
+    htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+
+    if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    /* Configurar PWM en canal 4 */
+    sConfigOC.OCMode = TIM_OCMODE_PWM1;
+    sConfigOC.Pulse = 100;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+
+    if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC,
+                                  TIM_CHANNEL_4) != HAL_OK)
+    {
+        Error_Handler();
+    }
+}
+
+void EXTI15_10_IRQHandler(void){
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if (GPIO_Pin == GPIO_PIN_13)
+    {
+        uint32_t tiempo_actual = HAL_GetTick();
+
+        /* Evitar rebotes del pulsador */
+        if ((tiempo_actual - ultima_pulsacion) >= 200)
+        {
+            ultima_pulsacion = tiempo_actual;
+
+            /* Incrementar ciclo de trabajo */
+            dutyCycle += 20;
+
+            /* Volver al 20 % después del 80 % */
+            if (dutyCycle > 80)
+            {
+                dutyCycle = 20;
+            }
+
+            /* Actualizar el registro CCR4 */
+            __HAL_TIM_SET_COMPARE(&htim2,
+                                  TIM_CHANNEL_4,
+                                  dutyCycle * 5);
+        }
+    }
+}
+
 
 /**
   * @brief  System Clock Configuration
-  *         The system Clock is configured as follow : 
+  *         The system Clock is configured as follow :
   *            System Clock source            = PLL (HSE)
   *            SYSCLK(Hz)                     = 168000000
   *            HCLK(Hz)                       = 168000000
@@ -179,8 +253,8 @@ static void SystemClock_Config(void)
   /* Enable Power Control clock */
   __HAL_RCC_PWR_CLK_ENABLE();
 
-  /* The voltage scaling allows optimizing the power consumption when the device is 
-     clocked below the maximum system frequency, to update the voltage scaling value 
+  /* The voltage scaling allows optimizing the power consumption when the device is
+     clocked below the maximum system frequency, to update the voltage scaling value
      regarding system frequency refer to product datasheet.  */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
@@ -199,13 +273,13 @@ static void SystemClock_Config(void)
     Error_Handler();
   }
 
-  /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2 
+  /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
      clocks dividers */
   RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;  
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;  
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
   if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
     /* Initialization Error */
@@ -243,7 +317,7 @@ static void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{ 
+{
   /* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
 
@@ -257,8 +331,8 @@ void assert_failed(uint8_t* file, uint32_t line)
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
