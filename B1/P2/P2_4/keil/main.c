@@ -71,22 +71,15 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority) {
   */
 
 /* Private typedef -----------------------------------------------------------*/
+
+
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef tim2;
-TIM_HandleTypeDef tim3;
-
-volatile uint8_t frecuencia = 0;
-volatile uint32_t captura_anterior = 0;
-volatile uint32_t frecuencia_medida = 0;
-volatile uint8_t primera_captura = 1;
-
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Error_Handler(void);
-static void initTimer(void);
-static void initTimer3(void);
+void MX_TIM2_Init(void);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -95,6 +88,8 @@ static void initTimer3(void);
   * @param  None
   * @retval None
   */
+	
+	TIM_HandleTypeDef htim2;
 int main(void)
 {
 
@@ -113,22 +108,8 @@ int main(void)
   SystemClock_Config();
   SystemCoreClockUpdate();
 	
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-	__HAL_RCC_GPIOC_CLK_ENABLE();
-
-	GPIO_InitStruct.Pin = GPIO_PIN_13;
-	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-
-	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-
-	
-	initTimer();
-	initTimer3();
+	MX_TIM2_Init();
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
 
   /* Add your application code here
      */
@@ -147,25 +128,49 @@ int main(void)
   /* Infinite loop */
   while (1)
   {
-  }
-}
+	}
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+}
+void MX_TIM2_Init(void)
 {
-    if (GPIO_Pin == GPIO_PIN_13)
+    TIM_OC_InitTypeDef sConfigOC = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    /* Habilitar relojes */
+    __HAL_RCC_TIM2_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+
+    /* Configurar PB11 como TIM2_CH4 */
+    GPIO_InitStruct.Pin = GPIO_PIN_11;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
+
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /* Configurar TIM2 */
+    htim2.Instance = TIM2;
+    htim2.Init.Prescaler = 83;
+    htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim2.Init.Period = 499;
+    htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+
+    if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
     {
-        if (frecuencia == 0)
-        {
-            frecuencia = 1;
-            __HAL_TIM_SET_COUNTER(&tim2, 0);
-						__HAL_TIM_SET_AUTORELOAD(&tim2, 16799);
-        }
-        else
-        {
-            frecuencia = 0;
-            __HAL_TIM_SET_COUNTER(&tim2, 0);
-						__HAL_TIM_SET_AUTORELOAD(&tim2, 41999);
-        }
+        Error_Handler();
+    }
+
+    /* Configurar PWM en canal 4 */
+    sConfigOC.OCMode = TIM_OCMODE_PWM1;
+    sConfigOC.Pulse = 125;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+
+    if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC,
+                                  TIM_CHANNEL_4) != HAL_OK)
+    {
+        Error_Handler();
     }
 }
 
@@ -189,135 +194,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   * @param  None
   * @retval None
   */
-
-static void initTimer(void)
-{
-    TIM_OC_InitTypeDef TIM_Channel_InitStruct = {0};
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-    /* Habilitar los relojes */
-    __HAL_RCC_TIM2_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-
-    /* Configurar PB11 como función alternativa TIM2_CH4 */
-    GPIO_InitStruct.Pin = GPIO_PIN_11;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
-
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-    /* Configurar Timer 2 */
-    tim2.Instance = TIM2;
-    tim2.Init.Prescaler = 0;
-    tim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-    tim2.Init.Period = 41999;
-    tim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-
-    HAL_TIM_OC_Init(&tim2);
-
-    /* Configurar canal 4 en modo Toggle */
-    TIM_Channel_InitStruct.OCMode = TIM_OCMODE_TOGGLE;
-    TIM_Channel_InitStruct.Pulse = 0;
-    TIM_Channel_InitStruct.OCPolarity = TIM_OCPOLARITY_HIGH;
-    TIM_Channel_InitStruct.OCFastMode = TIM_OCFAST_DISABLE;
-
-    HAL_TIM_OC_ConfigChannel(&tim2, &TIM_Channel_InitStruct, TIM_CHANNEL_4);
-
-    /* Iniciar Timer 2 */
-    HAL_TIM_OC_Start(&tim2, TIM_CHANNEL_4);
-}
-static void initTimer3(void)
-{
-    TIM_IC_InitTypeDef TIM_Channel_InitStruct = {0};
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-    /* Habilitar relojes */
-    __HAL_RCC_TIM3_CLK_ENABLE();
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-
-    /* Configurar PA6 como TIM3_CH1 */
-    GPIO_InitStruct.Pin = GPIO_PIN_6;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
-
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-    /* Configurar TIM3 */
-    tim3.Instance = TIM3;
-    tim3.Init.Prescaler = 83;
-    tim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-    tim3.Init.Period = 65535;
-    tim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    tim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-
-    HAL_TIM_IC_Init(&tim3);
-
-    /* Configurar captura de flancos ascendentes */
-    TIM_Channel_InitStruct.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-    TIM_Channel_InitStruct.ICSelection = TIM_ICSELECTION_DIRECTTI;
-    TIM_Channel_InitStruct.ICPrescaler = TIM_ICPSC_DIV1;
-    TIM_Channel_InitStruct.ICFilter = 0;
-
-    HAL_TIM_IC_ConfigChannel(&tim3, &TIM_Channel_InitStruct, TIM_CHANNEL_1);
-
-    /* Habilitar interrupción de TIM3 */
-    HAL_NVIC_SetPriority(TIM3_IRQn, 5, 0);
-    HAL_NVIC_EnableIRQ(TIM3_IRQn);
-
-    /* Iniciar captura */
-    HAL_TIM_IC_Start_IT(&tim3, TIM_CHANNEL_1);
-}
-
-void EXTI15_10_IRQHandler(void)
-{
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
-}
-
-void TIM3_IRQHandler(void)
-{
-    HAL_TIM_IRQHandler(&tim3);
-}
-
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
-{
-    if (htim->Instance == TIM3 &&
-        htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
-    {
-        uint32_t captura_actual =
-            HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-
-        if (primera_captura)
-        {
-            captura_anterior = captura_actual;
-            primera_captura = 0;
-        }
-        else
-        {
-            uint32_t diferencia;
-
-            if (captura_actual >= captura_anterior)
-            {
-                diferencia = captura_actual - captura_anterior;
-            }
-            else
-            {
-                diferencia = (65536 - captura_anterior) + captura_actual;
-            }
-
-            if (diferencia != 0)
-            {
-                frecuencia_medida = 1000000 / diferencia;
-            }
-
-            captura_anterior = captura_actual;
-        }
-    }
-}
-
 static void SystemClock_Config(void)
 {
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
@@ -336,8 +212,8 @@ static void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 336;
+  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
