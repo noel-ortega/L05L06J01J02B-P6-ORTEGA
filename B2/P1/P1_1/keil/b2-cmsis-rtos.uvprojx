@@ -390,9 +390,19 @@
               <FilePath>..\src\main.c</FilePath>
             </File>
             <File>
-              <FileName>Thread.c</FileName>
+              <FileName>Thread2.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\src\Thread.c</FilePath>
+              <FilePath>..\src\Thread2.c</FilePath>
+            </File>
+            <File>
+              <FileName>Thread3.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\Thread3.c</FilePath>
+            </File>
+            <File>
+              <FileName>Thread1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\Thread1.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -540,5 +550,14 @@
       </file>
     </files>
   </RTE>
+
+  <LayerInfo>
+    <Layers>
+      <Layer>
+        <LayName>b2-cmsis-rtos</LayName>
+        <LayPrjMark>1</LayPrjMark>
+      </Layer>
+    </Layers>
+  </LayerInfo>
 
 </Project>
