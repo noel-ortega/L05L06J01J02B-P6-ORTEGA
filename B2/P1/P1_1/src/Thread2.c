@@ -1,13 +1,17 @@
 #include "cmsis_os2.h"                          // CMSIS RTOS header file
 #include "stm32f4xx_hal.h"
 #include <stdlib.h> 
+ 
 /*----------------------------------------------------------------------------
  *      Thread 2 'Thread_Name': Sample thread
  *---------------------------------------------------------------------------*/
 
-osThreadId_t tid_Thread2;                        // thread id
+ osThreadId_t tid_Thread2;                        // thread id
 int Init_Thread2(void);  
-void Thread2 (void *argument);                   // thread function
+void Thread2 (void *argument);   // thread function
+extern osThreadId_t tid_Thread3;
+
+
 GPIO_InitTypeDef led_ldm = { 
         .Pin = GPIO_PIN_7,
         .Mode = GPIO_MODE_OUTPUT_PP,
@@ -38,9 +42,16 @@ void Thread2 (void *argument) {
   mygpio_pin2 *gpio = (mygpio_pin2 *)argument;
 	HAL_GPIO_Init(gpio->port, &(gpio->pin));	
   while (1) {
+		osThreadFlagsWait(0x0001, osFlagsWaitAll, osWaitForever);
+		
+		for(int i =0; i<20; i++){
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7  , GPIO_PIN_SET); 
 		osDelay(137);
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7 , GPIO_PIN_RESET); 
 		osDelay(137);
+			
+			if(i==14)
+				osThreadFlagsSet(tid_Thread3, 0x0001);
+		}
   }
 }

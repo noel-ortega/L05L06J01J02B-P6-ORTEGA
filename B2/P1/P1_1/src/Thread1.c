@@ -7,8 +7,12 @@
 
 osThreadId_t tid_Thread1;                        // thread id
 int Init_Thread (void);  
-void Thread1 (void *argument);                   // thread function
-GPIO_InitTypeDef led_ld1 = { 
+void Thread1 (void *argument);  // thread function
+static int ciclosLed=0;
+extern osThreadId_t tid_Thread2;
+
+
+GPIO_InitTypeDef led_ld1 = {
         .Pin = GPIO_PIN_0,
         .Mode = GPIO_MODE_OUTPUT_PP,
         .Pull = GPIO_NOPULL,
@@ -22,7 +26,6 @@ typedef struct  {
 
 mygpio_pin pinB0;
 int Init_Thread (void) {
- 
 	// Initialize LEDS
     __HAL_RCC_GPIOB_CLK_ENABLE();
 	pinB0.pin= led_ld1;
@@ -42,5 +45,10 @@ void Thread1 (void *argument) {
 		osDelay(200);
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0 , GPIO_PIN_RESET); 
 		osDelay(800);
+		ciclosLed++;
+		if(ciclosLed == 5){
+			osThreadFlagsSet(tid_Thread2, 0x0001);
+		}
+	
   }
 }

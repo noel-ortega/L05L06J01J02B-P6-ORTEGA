@@ -404,6 +404,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\Thread1.c</FilePath>
             </File>
+            <File>
+              <FileName>Thread.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\src\Thread.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

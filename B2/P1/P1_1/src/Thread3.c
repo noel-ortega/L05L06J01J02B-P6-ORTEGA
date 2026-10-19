@@ -7,7 +7,10 @@
 
 osThreadId_t tid_Thread3;                        // thread id
 int Init_Thread3 (void);  
-void Thread3 (void *argument);                   // thread function
+void Thread3 (void *argument);									// thread function
+extern osThreadId_t tid_Thread2;
+
+
 GPIO_InitTypeDef led_ldd = { 
         .Pin = GPIO_PIN_14,
         .Mode = GPIO_MODE_OUTPUT_PP,
@@ -38,9 +41,16 @@ void Thread3 (void *argument) {
   mygpio_pin3 *gpio = (mygpio_pin3 *)argument;
 	HAL_GPIO_Init(gpio->port, &(gpio->pin));	
   while (1) {
+		osThreadFlagsWait(0x0001, osFlagsWaitAll, osWaitForever);
+		
+		for(int j=0; j<30; j++){
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14  , GPIO_PIN_SET); 
 		osDelay(287);
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14 , GPIO_PIN_RESET); 
 		osDelay(287);
+			
+			if(j==24)
+				osThreadFlagsSet(tid_Thread2, 0x0001);
   }
+}
 }

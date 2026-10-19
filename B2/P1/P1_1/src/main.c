@@ -119,13 +119,11 @@ int main(void)
 
   /* Create thread functions that start executing, 
   Example: osThreadNew(app_main, NULL, NULL); */
-
-  /* Start thread execution */
-  osKernelStart();
-	
-	Init_Thread();
+  Init_Thread();
 	Init_Thread2();
 	Init_Thread3();
+  /* Start thread execution */
+  osKernelStart();
 #endif
 
   /* Infinite loop */
