@@ -1,281 +1,245 @@
-
 /**
   ******************************************************************************
-  * @file    main.c
-  * @brief   B2 - Practica 1 - Ejercicio 4
+  * @file    Templates/Src/main.c 
+  * @author  MCD Application Team
+  * @brief   STM32F4xx HAL API Template project 
   *
-  * Sistema con tres hilos:
-  *   - Thread_Verde: controla el LED verde (PB0).
-  *   - Thread_Rojo: controla el LED rojo (PB14).
-  *   - Thread_Contador: gestiona un timer virtual de 3 segundos.
+  * @note    modified by ARM
+  *          The modifications allow to use this file as User Code Template
+  *          within the Device Family Pack.
+  ******************************************************************************
+  * @attention
   *
-  * El pulsador B1 (PC13) reinicia la cuenta mediante una interrupcion.
-  * Si pasan 3 segundos sin pulsaciones, el sistema se bloquea.
+  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
+  *
   ******************************************************************************
   */
 
-/* ====================== LIBRERIAS ====================== */
-
+/* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
 #ifdef _RTE_
-#include "RTE_Components.h"
+#include "RTE_Components.h"             // Component selection
 #endif
-
-#ifdef RTE_CMSIS_RTOS2
-#include "cmsis_os2.h"
+#ifdef RTE_CMSIS_RTOS2                  // when RTE component CMSIS RTOS2 is used
+#include "cmsis_os2.h"                  // ::CMSIS:RTOS2
 #endif
 
 #ifdef RTE_CMSIS_RTOS2_RTX5
+/**
+  * Override default HAL_GetTick function
+  */
+uint32_t HAL_GetTick (void) {
+  static uint32_t ticks = 0U;
+         uint32_t i;
 
-uint32_t HAL_GetTick(void)
-{
-    static uint32_t ticks = 0U;
-    uint32_t i;
+  if (osKernelGetState () == osKernelRunning) {
+    return ((uint32_t)osKernelGetTickCount ());
+  }
 
-    if (osKernelGetState() == osKernelRunning)
-    {
-        return ((uint32_t)osKernelGetTickCount());
-    }
-
-    for (i = (SystemCoreClock >> 14U); i > 0U; i--)
-    {
-        __NOP(); __NOP(); __NOP(); __NOP();
-        __NOP(); __NOP(); __NOP(); __NOP();
-        __NOP(); __NOP(); __NOP(); __NOP();
-    }
-
-    return ++ticks;
+  /* If Kernel is not running wait approximately 1 ms then increment 
+     and return auxiliary tick counter value */
+  for (i = (SystemCoreClock >> 14U); i > 0U; i--) {
+    __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
+    __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
+  }
+  return ++ticks;
 }
 
-HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
-{
-    UNUSED(TickPriority);
-    return HAL_OK;
-}
+/**
+  * Override default HAL_InitTick function
+  */
+HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority) {
+  
+  UNUSED(TickPriority);
 
+  return HAL_OK;
+}
 #endif
+#include "Thjoy.h"
+/** @addtogroup STM32F4xx_HAL_Examples
+  * @{
+  */
 
-/* ====================== ARCHIVOS DE LOS HILOS ====================== */
+/** @addtogroup Templates
+  * @{
+  */
 
-#include "Thread_Contador.h"
-#include "Thread_led_verde.h"
-#include "Thread_led_rojo.h"
-
-/* ====================== PROTOTIPOS ====================== */
-
+/* Private typedef -----------------------------------------------------------*/
+/* Private define ------------------------------------------------------------*/
+/* Private macro -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
+/* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 
-/* ====================== PROGRAMA PRINCIPAL ====================== */
-
+/* Private functions ---------------------------------------------------------*/
+/**
+  * @brief  Main program
+  * @param  None
+  * @retval None
+  */
 int main(void)
 {
-    // Estructura utilizada para configurar el pulsador
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    /* ====================== INICIALIZACION HAL ====================== */
+  /* STM32F4xx HAL library initialization:
+       - Configure the Flash prefetch, Flash preread and Buffer caches
+       - Systick timer is configured by default as source of time base, but user 
+             can eventually implement his proper time base source (a general purpose 
+             timer for example or other time source), keeping in mind that Time base 
+             duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and 
+             handled in milliseconds basis.
+       - Low Level Initialization
+     */
+  HAL_Init();
 
-    // Inicializamos la biblioteca HAL
-    HAL_Init();
-
+  
 #ifndef SIMULATOR
-    // Configuramos el reloj cuando utilizamos la placa real
-    SystemClock_Config();
+	/* Configure the system clock to 168 MHz only if we are using the real hardware
+	
+	*/
+	
+	SystemClock_Config();
 #endif
+	
+  SystemCoreClockUpdate();
 
-    // Actualizamos la frecuencia del nucleo
-    SystemCoreClockUpdate();
-
-    /* ====================== CONFIGURACION DEL PULSADOR ====================== */
-
-    // Habilitamos el reloj del puerto GPIOC
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-
-    // Configuramos PC13 para detectar flancos ascendentes
-    GPIO_InitStruct.Pin = GPIO_PIN_13;
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-
-    // Aplicamos la configuracion
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-    // Configuramos la prioridad de EXTI13
-    // Utilizamos una prioridad baja para las llamadas al RTOS
-    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 15, 0);
-
-    /* ====================== INICIALIZACION RTOS ====================== */
+  /* Add your application code here
+     */
 
 #ifdef RTE_CMSIS_RTOS2
+  /* Initialize CMSIS-RTOS2 */
+  osKernelInitialize ();
 
-    // Inicializamos el nucleo del sistema operativo
-    if (osKernelInitialize() != osOK)
-    {
-        Error_Handler();
-    }
-
-    /* ====================== CREACION DE HILOS ====================== */
-
-    // Creamos el hilo encargado del LED verde
-    if (Init_Thread_Verde() != 0)
-    {
-        Error_Handler();
-    }
-
-    // Creamos el hilo encargado del LED rojo
-    if (Init_Thread_Rojo() != 0)
-    {
-        Error_Handler();
-    }
-
-    // Creamos el hilo contador y su timer virtual
-    if (Init_Thread() != 0)
-    {
-        Error_Handler();
-    }
-
-    /* ====================== HABILITACION DE INTERRUPCIONES ====================== */
-
-    // Limpiamos posibles interrupciones pendientes
-    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_13);
-    HAL_NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
-
-    // Permitimos atender las interrupciones del pulsador
-    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-
-    /* ====================== INICIO DEL SISTEMA OPERATIVO ====================== */
-
-    // Iniciamos el planificador del RTOS
-    if (osKernelStart() != osOK)
-    {
-        Error_Handler();
-    }
-
+  /* Create thread functions that start executing, 
+  Example: osThreadNew(app_main, NULL, NULL); */
+  Init_Thjoy();
+  /* Start thread execution */
+  osKernelStart();
 #endif
 
-    /* ====================== BUCLE PRINCIPAL ====================== */
-
-    // En funcionamiento normal con RTOS no llegaremos aqui
-    while (1)
-    {
-    }
+  /* Infinite loop */
+  while (1)
+  {
+  }
 }
 
-/* ====================== INTERRUPCION DEL PULSADOR ====================== */
-
-void EXTI15_10_IRQHandler(void)
-{
-    // HAL comprueba y limpia la interrupcion de EXTI13
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
-}
-
-/* ====================== CALLBACK DEL PULSADOR ====================== */
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-#ifdef RTE_CMSIS_RTOS2
-
-    // Comprobamos que la interrupcion pertenece a PC13
-    if (GPIO_Pin == GPIO_PIN_13)
-    {
-        // Comprobamos que el sistema operativo esta funcionando
-        // y que el hilo contador tiene un identificador valido
-        if (osKernelGetState() == osKernelRunning &&
-            tid_Contador != NULL)
-        {
-            // Avisamos al contador para reiniciar los 3 segundos
-            osThreadFlagsSet(tid_Contador, FLAG_REINICIAR);
-        }
-    }
-
-#else
-    UNUSED(GPIO_Pin);
-#endif
-}
-
-/* ====================== CONFIGURACION DEL RELOJ ====================== */
-
+/**
+  * @brief  System Clock Configuration
+  *         The system Clock is configured as follow : 
+  *            System Clock source            = PLL (HSE)
+  *            SYSCLK(Hz)                     = 168000000
+  *            HCLK(Hz)                       = 168000000
+  *            AHB Prescaler                  = 1
+  *            APB1 Prescaler                 = 4
+  *            APB2 Prescaler                 = 2
+  *            HSE Frequency(Hz)              = 8000000
+  *            PLL_M                          = 25
+  *            PLL_N                          = 336
+  *            PLL_P                          = 2
+  *            PLL_Q                          = 7
+  *            VDD(V)                         = 3.3
+  *            Main regulator output voltage  = Scale1 mode
+  *            Flash Latency(WS)              = 5
+  * @param  None
+  * @retval None
+  */
 static void SystemClock_Config(void)
 {
-    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct;
+  RCC_OscInitTypeDef RCC_OscInitStruct;
 
-    // Habilitamos el reloj del controlador de alimentacion
-    __HAL_RCC_PWR_CLK_ENABLE();
+  /* Enable Power Control clock */
+  __HAL_RCC_PWR_CLK_ENABLE();
 
-    // Configuramos la escala de tension
-    __HAL_PWR_VOLTAGESCALING_CONFIG(
-        PWR_REGULATOR_VOLTAGE_SCALE1
-    );
+  /* The voltage scaling allows optimizing the power consumption when the device is 
+     clocked below the maximum system frequency, to update the voltage scaling value 
+     regarding system frequency refer to product datasheet.  */
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-    /* ====================== CONFIGURACION DEL OSCILADOR ====================== */
+  /* Enable HSE Oscillator and activate PLL with HSE as source */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLN = 168;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 7;
+  if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler();
+  }
 
-    // Utilizamos HSE con bypass y PLL
-    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-    RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+  /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2 
+     clocks dividers */
+  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;  
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;  
+  if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler();
+  }
 
-    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-
-    // Configuracion para SYSCLK de 168 MHz con HSE de 8 MHz
-    RCC_OscInitStruct.PLL.PLLM = 4;
-    RCC_OscInitStruct.PLL.PLLN = 168;
-    RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-    RCC_OscInitStruct.PLL.PLLQ = 7;
-
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-    {
-        Error_Handler();
-    }
-
-    /* ====================== CONFIGURACION DE BUSES ====================== */
-
-    RCC_ClkInitStruct.ClockType =
-        RCC_CLOCKTYPE_SYSCLK |
-        RCC_CLOCKTYPE_HCLK |
-        RCC_CLOCKTYPE_PCLK1 |
-        RCC_CLOCKTYPE_PCLK2;
-
-    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
-
-    if (HAL_RCC_ClockConfig(
-        &RCC_ClkInitStruct,
-        FLASH_LATENCY_5
-    ) != HAL_OK)
-    {
-        Error_Handler();
-    }
-
-    // Activamos prefetch si corresponde a la revision del chip
-    if (HAL_GetREVID() == 0x1001)
-    {
-        __HAL_FLASH_PREFETCH_BUFFER_ENABLE();
-    }
+  /* STM32F405x/407x/415x/417x Revision Z devices: prefetch is supported */
+  if (HAL_GetREVID() == 0x1001)
+  {
+    /* Enable the Flash prefetch */
+    __HAL_FLASH_PREFETCH_BUFFER_ENABLE();
+  }
 }
 
-/* ====================== MANEJADOR DE ERRORES ====================== */
-
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @param  None
+  * @retval None
+  */
 static void Error_Handler(void)
 {
-    // Detenemos el programa si ocurre un error de inicializacion
-    while (1)
-    {
-    }
+  /* User may add here some code to deal with this error */
+  while(1)
+  {
+  }
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t* file, uint32_t line)
-{
-    UNUSED(file);
-    UNUSED(line);
+{ 
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
 
-    while (1)
-    {
-    }
+  /* Infinite loop */
+  while (1)
+  {
+  }
 }
 
 #endif
+
+/**
+  * @}
+  */ 
+
+/**
+  * @}
+  */ 
+
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

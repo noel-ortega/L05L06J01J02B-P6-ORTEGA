@@ -395,34 +395,14 @@
               <FilePath>..\src\main.h</FilePath>
             </File>
             <File>
-              <FileName>Thread_Contador.c</FileName>
+              <FileName>Thjoy.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\src\Thread_Contador.c</FilePath>
+              <FilePath>..\src\Thjoy.c</FilePath>
             </File>
             <File>
-              <FileName>Thread_Contador.h</FileName>
+              <FileName>Thjoy.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\src\Thread_Contador.h</FilePath>
-            </File>
-            <File>
-              <FileName>Thread_led_verde.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\Thread_led_verde.c</FilePath>
-            </File>
-            <File>
-              <FileName>Thread_led_verde.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\src\Thread_led_verde.h</FilePath>
-            </File>
-            <File>
-              <FileName>Thread_led_rojo.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\Thread_led_rojo.c</FilePath>
-            </File>
-            <File>
-              <FileName>Thread_led_rojo.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\src\Thread_led_rojo.h</FilePath>
+              <FilePath>..\src\Thjoy.h</FilePath>
             </File>
           </Files>
         </Group>
