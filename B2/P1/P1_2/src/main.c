@@ -62,7 +62,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority) {
   return HAL_OK;
 }
 #endif
-#include "Thread.h"
+#include "Thjoy.h"
 /** @addtogroup STM32F4xx_HAL_Examples
   * @{
   */
@@ -119,9 +119,7 @@ int main(void)
 
   /* Create thread functions that start executing, 
   Example: osThreadNew(app_main, NULL, NULL); */
-  Init_Thread();
-	Init_Thread2();
-	Init_Thread3();
+  Init_Thjoy();
   /* Start thread execution */
   osKernelStart();
 #endif

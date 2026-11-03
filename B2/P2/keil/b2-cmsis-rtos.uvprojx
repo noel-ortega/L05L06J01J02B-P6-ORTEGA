@@ -390,19 +390,9 @@
               <FilePath>..\src\main.c</FilePath>
             </File>
             <File>
-              <FileName>main.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\src\main.h</FilePath>
-            </File>
-            <File>
-              <FileName>Thjoy.c</FileName>
+              <FileName>Thread.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\src\Thjoy.c</FilePath>
-            </File>
-            <File>
-              <FileName>Thjoy.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\src\Thjoy.h</FilePath>
+              <FilePath>..\src\Thread.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -550,14 +540,5 @@
       </file>
     </files>
   </RTE>
-
-  <LayerInfo>
-    <Layers>
-      <Layer>
-        <LayName>b2-cmsis-rtos</LayName>
-        <LayPrjMark>1</LayPrjMark>
-      </Layer>
-    </Layers>
-  </LayerInfo>
 
 </Project>

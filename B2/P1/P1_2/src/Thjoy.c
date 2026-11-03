@@ -107,6 +107,7 @@ void Thread_Joystick(void *argument){
 			abajo = HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_12);
 			izquierda = HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_14);
 			centro = HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_15);
+			
 			if(HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_10)){ //ARRIBA
 		    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET); //0
 				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET); //0
