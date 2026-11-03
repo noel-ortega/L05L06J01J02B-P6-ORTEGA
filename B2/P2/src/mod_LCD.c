@@ -106,4 +106,20 @@ spi_errors++; // conflicto de bus
 }
 }
 
+void LCD_wr_data(unsigned char data){
+			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, GPIO_PIN_RESET); //CS
+			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_RESET); //A0
+		  SPIdrv->Send(&data, sizeof(data)); //enviar dato
+	    osThreadFlagsWait(ARM_SPI_EVENT_TRANSFER_COMPLETE, osFlagsWaitAny, osWaitForever);
+			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, GPIO_PIN_SET);//CS
+}
+
+void LCD_wr_cmd(unsigned char cmd){
+			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, GPIO_PIN_RESET); //CS
+			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_RESET); //A0
+		  SPIdrv->Send(&cmd, sizeof(cmd)); //enviar dato
+	    osThreadFlagsWait(ARM_SPI_EVENT_TRANSFER_COMPLETE, osFlagsWaitAny, osWaitForever);
+			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, GPIO_PIN_SET);//CS
+}
+
 
